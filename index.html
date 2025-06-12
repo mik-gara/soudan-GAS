@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メンタルヘルス相談窓口診断</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        /* プログレスバー */
+        .progress-container {
+            margin-bottom: 30px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .step-counter {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 25%;
+        }
+        
+        /* 質問カード */
+        .question-step {
+            display: none;
+        }
+        
+        .question-step.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .question-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .options {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        
+        .option {
+            margin: 15px 0;
+        }
+        
+        .option label {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .option label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.3);
+            accent-color: #667eea;
+        }
+        
+        .option input[type="radio"]:checked + span {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .option label:has(input:checked) {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        /* ボタン */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-back {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-back:hover:not(:disabled) {
+            background: #cbd5e0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+        
+        /* 結果表示 */
+        .result-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .result-card.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .service-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .contact-info {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .contact-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn:hover {
+            background: #2f855a;
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .restart-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+                margin: 10px 0;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .question-title {
+                font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🌱 メンタルヘルス相談窓口診断</h1>
+                <p>あなたに最適な相談窓口をご提案します</p>
+            </div>
+            
+            <!-- プログレスバー -->
+            <div class="progress-container">
+                <div class="progress-info">
+                    <div class="step-counter">質問 <span id="currentStep">1</span> / 4</div>
+                    <div style="color: #718096; font-size: 0.9rem;" id="progressPercent">25%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <!-- 質問ステップ -->
+            <div id="questionContainer">
+                <!-- 質問1: 緊急度 -->
+                <div class="question-step active" data-step="1">
+                    <div class="question-title">今のあなたの状況は？</div>
+                    <ul class="options">
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="urgency" value="emergency">
+                                <span>🚨 今すぐ誰かと話したい・危険を感じる</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="urgency" value="urgent">
+                                <span>⚡ 数日中には相談したい</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="urgency" value="normal">
+                                <span>🕐 時間をかけてじっくり相談したい</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="urgency" value="prevention">
+                                <span>🌱 予防や健康管理が目的</span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 質問2: 症状 -->
+                <div class="question-step" data-step="2">
+                    <div class="question-title">主な悩みや症状は？</div>
+                    <ul class="options">
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="symptoms" value="mental">
+                                <span>😟 気分の落ち込み・不安・イライラ</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="symptoms" value="physical">
+                                <span>😴 頭痛・疲労・胃腸の不調・眠れない</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="symptoms" value="workplace">
+                                <span>💼 職場の人間関係・仕事の悩み</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="symptoms" value="family">
+                                <span>🏠 家族や個人的な問題</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="symptoms" value="multiple">
+                                <span>🔄 複数の問題が絡み合っている</span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 質問3: 相談方法 -->
+                <div class="question-step" data-step="3">
+                    <div class="question-title">相談方法の希望は？</div>
+                    <ul class="options">
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="preference" value="phone">
+                                <span>📞 電話で匿名で相談したい</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="preference" value="face">
+                                <span>👥 対面でじっくり話したい</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="preference" value="medical">
+                                <span>🏥 医師の診察を受けたい</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="preference" value="online">
+                                <span>💻 オンラインで気軽に</span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 質問4: 時間帯 -->
+                <div class="question-step" data-step="4">
+                    <div class="question-title">相談可能な時間帯は？</div>
+                    <ul class="options">
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="timing" value="anytime">
+                                <span>🌙 いつでも（24時間対応希望）</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="timing" value="business">
+                                <span>🌅 平日の日中</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="timing" value="evening">
+                                <span>🌆 平日の夕方・夜間</span>
+                            </label>
+                        </li>
+                        <li class="option">
+                            <label>
+                                <input type="radio" name="timing" value="weekend">
+                                <span>📅 土日・祝日</span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ボタンエリア -->
+            <div class="button-container">
+                <button class="btn btn-back" id="backBtn" onclick="goBack()" disabled>
+                    ← 前の質問
+                </button>
+                <button class="btn btn-next" id="nextBtn" onclick="goNext()" disabled>
+                    次の質問 →
+                </button>
+                <button class="btn btn-submit" id="submitBtn" onclick="submitForm()" style="display: none;" disabled>
+                    🎯 診断結果を見る
+                </button>
+            </div>
+            
+            <!-- ローディング -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>診断中...</p>
+            </div>
+            
+            <!-- 結果表示 -->
+            <div class="result-card" id="result">
+                <!-- 結果がここに表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps ScriptのWebアプリURLを設定（セミコロンを削除）
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzU7LqheJw7k0efj8vYdPmmxBBSbUje1E4AGWKvqOqqs3buLh0aRD20eN_pS-DHuPlE/exec';
+        
+        // アプリケーションの状態管理
+        let currentStep = 1;
+        const totalSteps = 4;
+        let answers = {};
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            setupEventListeners();
+        });
+        
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // ラジオボタンの変更を監視
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    answers[this.name] = this.value;
+                    updateButtons();
+                });
+            });
+        }
+        
+        // ボタンの状態を更新
+        function updateButtons() {
+            const currentQuestionStep = document.querySelector(`.question-step[data-step="${currentStep}"]`);
+            const currentInput = currentQuestionStep.querySelector('input[type="radio"]:checked');
+            
+            // 次へボタンの状態
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (currentInput) {
+                if (currentStep < totalSteps) {
+                    nextBtn.disabled = false;
+                } else {
+                    submitBtn.disabled = false;
+                }
+            } else {
+                nextBtn.disabled = true;
+                submitBtn.disabled = true;
+            }
+            
+            // 戻るボタンの状態
+            document.getElementById('backBtn').disabled = currentStep === 1;
+        }
+        
+        // 次の質問へ進む
+        function goNext() {
+            if (currentStep < totalSteps) {
+                // 現在のステップを非表示
+                document.querySelector(`.question-step[data-step="${currentStep}"]`).classList.remove('active');
+                
+                currentStep++;
+                
+                // 次のステップを表示
+                document.querySelector(`.question-step[data-step="${currentStep}"]`).classList.add('active');
+                
+                updateProgress();
+                updateButtons();
+                
+                // 最後の質問の場合はボタンを切り替え
+                if (currentStep === totalSteps) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('submitBtn').style.display = 'block';
+                }
+            }
+        }
+        
+        // 前の質問に戻る
+        function goBack() {
+            if (currentStep > 1) {
+                // 現在のステップを非表示
+                document.querySelector(`.question-step[data-step="${currentStep}"]`).classList.remove('active');
+                
+                currentStep--;
+                
+                // 前のステップを表示
+                document.querySelector(`.question-step[data-step="${currentStep}"]`).classList.add('active');
+                
+                updateProgress();
+                updateButtons();
+                
+                // ボタンの表示を元に戻す
+                if (currentStep < totalSteps) {
+                    document.getElementById('nextBtn').style.display = 'block';
+                    document.getElementById('submitBtn').style.display = 'none';
+                }
+            }
+        }
+        
+        // プログレスバーの更新
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            
+            document.getElementById('currentStep').textContent = currentStep;
+            document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        // 診断結果を送信
+        async function submitForm() {
+            // すべての質問に回答されているかチェック
+            const requiredFields = ['urgency', 'symptoms', 'preference', 'timing'];
+            const missingFields = requiredFields.filter(field => !answers[field]);
+            
+            if (missingFields.length > 0) {
+                alert('すべての質問にお答えください。');
+                return;
+            }
+            
+            // ローディング表示
+            document.getElementById('questionContainer').style.display = 'none';
+            document.querySelector('.button-container').style.display = 'none';
+            document.querySelector('.progress-container').style.display = 'none';
+            document.getElementById('loading').classList.add('show');
+            
+            try {
+                console.log('診断リクエスト送信開始');
+                console.log('送信データ:', { action: 'getDiagnosis', answers: answers });
+
+                // Google Apps Scriptに診断リクエストを送信
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        action: 'getDiagnosis',
+                        answers: answers
+                    })
+                });
+                
+                console.log('レスポンスステータス:', response.status);
+                console.log('レスポンスヘッダー:', [...response.headers.entries()]);
+                
+                // レスポンスの検証
+                if (!response.ok) {
+                    throw new Error(`HTTPエラー: ${response.status} ${response.statusText}`);
+                }
+                
+                // Content-Typeの確認
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    console.warn("予期しないContent-Type:", contentType);
+                    // JSONでない場合はテキストとして読み込み
+                    const textResponse = await response.text();
+                    console.log('テキストレスポンス:', textResponse);
+                    throw new Error('サーバーからJSON以外のレスポンスが返されました: ' + textResponse);
+                }
+                
+                const result = await response.json();
+                console.log('解析されたレスポンス:', result);
+                
+                if (result.success) {
+                    displayResult(result.recommendation);
+                    if (result.dataSaved) {
+                        console.log('データがスプレッドシートに保存されました');
+                    } else {
+                        console.warn('データの保存に失敗しました');
+                    }
+                } else {
+                    throw new Error(result.error || '診断に失敗しました');
+                }
+                
+            } catch (error) {
+                console.error('診断エラー詳細:', error);
+                console.error('エラータイプ:', error.constructor.name);
+                console.error('エラーメッセージ:', error.message);
+                
+                document.getElementById('loading').classList.remove('show');
+                
+                // エラーの種類に応じてメッセージを変更
+                let errorMessage = '診断中にエラーが発生しました。';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください。';
+                } else if (error.message.includes('HTTPエラー')) {
+                    errorMessage = 'サーバーエラーが発生しました。しばらく待ってから再度お試しください。';
+                } else if (error.message.includes('JSON')) {
+                    errorMessage = 'データの処理中にエラーが発生しました。';
+                }
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="error">
+                        ${errorMessage}
+                        <details style="margin-top: 10px;">
+                            <summary>詳細情報</summary>
+                            <pre style="font-size: 12px; color: #666; margin-top: 5px;">${error.message}</pre>
+                        </details>
+                        <button class="restart-btn" onclick="restartDiagnosis()">最初からやり直す</button>
+                    </div>
+                `;
+                document.getElementById('result').classList.add('show');
+            }
+        }
+        
+        // デバッグ用の関数（本番環境では削除してください）
+        function debugGASConnection() {
+            console.log('GAS URL:', GAS_WEB_APP_URL);
+            console.log('テスト接続を開始...');
+            
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: JSON.stringify({
+                    action: 'test',
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                console.log('テスト接続結果:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('テストレスポンス:', text);
+                try {
+                    const json = JSON.parse(text);
+                    console.log('JSON解析成功:', json);
+                } catch (e) {
+                    console.log('JSON解析失敗、テキストとして処理:', text);
+                }
+            })
+            .catch(error => {
+                console.error('テスト接続エラー:', error);
+            });
+        }
+        
+        // 結果表示
+        function displayResult(recommendation) {
+            document.getElementById('loading').classList.remove('show');
+            
+            let contactInfo = '';
+            if (recommendation.contact.startsWith('http')) {
+                contactInfo = `<a href="${recommendation.contact}" target="_blank" class="contact-btn" onclick="recordContactClick()">サイトを開く</a>`;
+            } else {
+                contactInfo = `<strong>連絡先：</strong> ${recommendation.contact}`;
+            }
+            
+            let clinicsInfo = '';
+            if (recommendation.clinics) {
+                clinicsInfo = '<div class="contact-info"><strong>医療機関一覧：</strong><br>';
+                recommendation.clinics.forEach(clinic => {
+                    clinicsInfo += `<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                        <strong>${clinic.name}</strong><br>
+                        電話: ${clinic.phone}<br>
+                        時間: ${clinic.hours}
+                    </div>`;
+                });
+                clinicsInfo += '</div>';
+            }
+            
+            const resultHTML = `
+                <div class="result-title">🎯 あなたにおすすめの相談窓口</div>
+                <div class="service-info">
+                    <h3>${recommendation.name}</h3>
+                    <p>${recommendation.description}</p>
+                    <div class="contact-info">
+                        ${contactInfo}
+                        <br><strong>対応時間：</strong> ${recommendation.hours}
+                        <br><strong>サービス種別：</strong> ${recommendation.service_type}
+                        <br><strong>特徴：</strong> ${recommendation.features.join('、')}
+                    </div>
+                    ${clinicsInfo}
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                    <p><strong>💡 ご利用のヒント：</strong></p>
+                    <p>相談は勇気のいることですが、専門家があなたをサポートします。一人で抱え込まず、まずは気軽にご連絡ください。</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="restart-btn" onclick="restartDiagnosis()">もう一度診断する</button>
+                </div>
+            `;
+            
+            document.getElementById('result').innerHTML = resultHTML;
+            document.getElementById('result').classList.add('show');
+        }
+        
+        // 連絡先クリックの記録
+        async function recordContactClick() {
+            try {
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: 'recordContact',
+                        answers: answers
+                    })
+                });
+            } catch (error) {
+                console.error('Contact tracking error:', error);
+            }
+        }
+        
+        // 診断をやり直す
+        function restartDiagnosis
