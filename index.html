@@ -526,46 +526,42 @@
             return counselingServices.urgent_support;
         }
 
-        // GASにデータを送信
-        async function saveToGAS(answers, recommendation, clickedContact = false) {
-            try {
-                const now = new Date();
-                const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
-                
-                const data = {
-                    sessionId: appState.sessionId,
-                    timestamp: now.toISOString(),
-                    date: now.toLocaleDateString('ja-JP'),
-                    weekday: weekdays[now.getDay()],
-                    time: now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-                    urgency: answers.urgency || '',
-                    symptoms: answers.symptoms || '',
-                    preference: answers.preference || '',
-                    timing: answers.timing || '',
-                    recommendedService: recommendation.name,
-                    serviceType: recommendation.serviceType,
-                    contactClicked: clickedContact ? 'はい' : 'いいえ',
-                    hour: now.getHours()
-                };
+       // GASにデータ送信（フォーム経由でCORS回避）
+function saveToGAS(answers, recommendation, clickedContact = false) {
+    const now = new Date();
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+    const data = {
+        sessionId: appState.sessionId,
+        timestamp: now.toISOString(),
+        date: now.toLocaleDateString('ja-JP'),
+        weekday: weekdays[now.getDay()],
+        time: now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+        urgency: answers.urgency || '',
+        symptoms: answers.symptoms || '',
+        preference: answers.preference || '',
+        timing: answers.timing || '',
+        recommendedService: recommendation.name,
+        serviceType: recommendation.serviceType,
+        contactClicked: clickedContact ? 'はい' : 'いいえ',
+        hour: now.getHours()
+    };
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+    submitFormToGAS(data);
+    return true;
+}
 
-                return true;
-            } catch (error) {
-                console.error('GAS保存エラー:', error);
-                return false;
-            }
+// フォームにデータを埋めて送信
+function submitFormToGAS(data) {
+    const form = document.getElementById('gasForm');
+    for (const key in data) {
+        if (form.elements[key]) {
+            form.elements[key].value = data[key];
         }
+    }
+    form.submit();
+}
+
 
         // 進捗バーを更新
         function updateProgress() {
