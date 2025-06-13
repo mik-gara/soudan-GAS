@@ -776,5 +776,24 @@
         // アプリ開始
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
+
+<!-- 非表示フォーム（GAS送信用） -->
+<form id="gasForm" action="https://script.google.com/macros/s/AKfycbwW0FlngbWnVvHE9Tu-U0qqF4MXJJGg-2vGoi21Y-gzy7dCP6cXLiS0JZayP5xRiSYC/exec" method="POST" target="hiddenFrame" style="display: none;">
+  <input type="hidden" name="sessionId">
+  <input type="hidden" name="timestamp">
+  <input type="hidden" name="date">
+  <input type="hidden" name="weekday">
+  <input type="hidden" name="time">
+  <input type="hidden" name="urgency">
+  <input type="hidden" name="symptoms">
+  <input type="hidden" name="preference">
+  <input type="hidden" name="timing">
+  <input type="hidden" name="recommendedService">
+  <input type="hidden" name="serviceType">
+  <input type="hidden" name="contactClicked">
+  <input type="hidden" name="hour">
+</form>
+<iframe name="hiddenFrame" style="display: none;"></iframe>
+    
 </body>
 </html>
